@@ -111,8 +111,8 @@ _add (struct fib_node *n, const uint8_t *key, int plen, void *data, int depth)
         }
     }
 
-  /* case2: プレフィックスが次の階層の途中で終わる場合 */
-  if (plen < depth + K)
+  /* case2: プレフィックスが次の階層の途中で終わる場合，もしくは葉ノードの場合 */
+  if (plen < depth + K || n->leaf)
     {
       /*
        * - Example: K=2 (4-ary)
@@ -160,6 +160,9 @@ _add (struct fib_node *n, const uint8_t *key, int plen, void *data, int depth)
 
   /* case3: さらに深い階層へ再帰 */
   index = BIT_INDEX32 (key, depth, K);
+#ifdef DEBUG
+  printf ("depth=%d, index=%d\n", depth, index);
+#endif
   n->child[index] = _add (n->child[index], key, plen, data, depth + K);
   return n;
 }
