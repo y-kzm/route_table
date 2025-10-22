@@ -1,9 +1,9 @@
 # Usage
 ```
-$ ./main
-Usage: ./main <route_file> [lookup_file]
+Usage: ./main <route_file> [lookup_file] [delete_file]
   <route_file>  : prefixes & nexthops input
   [lookup_file] : run basic test with lookups; if omitted, run performance test
+  [delete_file] : run basic test with deletions additionally
 ```
 
 ### `valgrind`
@@ -92,7 +92,7 @@ Running basic test with lookup file b.txt...
 
 ## Results
 
-- radix.h
+- fib.h
   ```c
   #define K 2 // change here
   #define BRANCH_SZ (1 << K)

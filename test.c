@@ -6,7 +6,7 @@
 #include <string.h>
 #include <sys/time.h>
 
-#include "radix.h"
+#include "fib.h"
 
 #define LINE_BUF_SIZE 4096
 #define IP_BUF_SIZE 64
@@ -57,11 +57,11 @@ ipv4_bytes_to_uint32_ntoh (const uint8_t addr[4])
  * ファイル形式: "<cidr> <next-hop-ip>"
  * 例: "10.0.0.0/8 192.0.2.1"
  * ------------------------------------------- */
-static struct rib_tree *
+static struct fib_tree *
 _load_routes (const char *path)
 {
   FILE *fp = NULL;
-  struct rib_tree *tree = NULL;
+  struct fib_tree *tree = NULL;
 
   char line[LINE_BUF_SIZE];
   char cidr_buf[IP_BUF_SIZE];
@@ -82,10 +82,10 @@ _load_routes (const char *path)
       return NULL;
     }
 
-  tree = rib_new (tree);
+  tree = fib_new (tree);
   if (!tree)
     {
-      fprintf (stderr, "ERROR: rib_new failed\n");
+      fprintf (stderr, "ERROR: fib_new failed\n");
       fclose (fp);
       return NULL;
     }
@@ -116,13 +116,13 @@ _load_routes (const char *path)
         }
       nh_host_u32 = ipv4_bytes_to_uint32_ntoh (nh_net_u8);
 
-      if (rib_route_add (tree, cidr_net_u8, plen,
+      if (fib_route_add (tree, cidr_net_u8, plen,
                          (void *)(uintptr_t)nh_host_u32)
           < 0)
         {
-          fprintf (stderr, "ERROR: rib_route_add failed for %s %s\n", cidr_buf,
+          fprintf (stderr, "ERROR: fib_route_add failed for %s %s\n", cidr_buf,
                    nh_buf);
-          rib_free (tree);
+          fib_free (tree);
           fclose (fp);
           return NULL;
         }
@@ -141,12 +141,12 @@ _load_routes (const char *path)
  * 例: "203.0.113.5"
  * ------------------------------------------- */
 int
-_run_basic_lookup (struct rib_tree *tree, const char *path)
+_run_basic_lookup (struct fib_tree *tree, const char *path)
 {
   printf ("============================================\n");
 
   FILE *fp;
-  struct rib_node *node;
+  struct fib_node *node;
 
   char line[LINE_BUF_SIZE];
   char ip_addr_buf[IP_BUF_SIZE];
@@ -183,7 +183,7 @@ _run_basic_lookup (struct rib_tree *tree, const char *path)
           continue;
         }
 
-      node = rib_route_lookup (tree, ip_addr_net_u8);
+      node = fib_route_lookup (tree, ip_addr_net_u8);
       if (node)
         {
           nh_host_u32 = (uint32_t)(uintptr_t)node->data;
@@ -206,7 +206,7 @@ _run_basic_lookup (struct rib_tree *tree, const char *path)
  * 例: "10.0.0.0/8"
  * ------------------------------------------- */
 int
-_run_delete_test (struct rib_tree *tree, const char *lookup_path,
+_run_delete_test (struct fib_tree *tree, const char *lookup_path,
                   const char *delete_path)
 {
   FILE *fp;
@@ -254,9 +254,9 @@ _run_delete_test (struct rib_tree *tree, const char *lookup_path,
         }
 
       printf ("- Deleting route for %s\n", cidr_buf);
-      if (rib_route_delete (tree, cidr_net_u8, plen) < 0)
+      if (fib_route_delete (tree, cidr_net_u8, plen) < 0)
         {
-          fprintf (stderr, "ERROR: rib_route_delete failed for %s\n",
+          fprintf (stderr, "ERROR: fib_route_delete failed for %s\n",
                    cidr_buf);
           fclose (fp);
           return -1;
@@ -279,9 +279,9 @@ _run_delete_test (struct rib_tree *tree, const char *lookup_path,
  * ランダム IPv4 を大量に引いてルックアップ（正否は不問）
  * ------------------------------------------- */
 int
-_benchmark_lookup_performance (struct rib_tree *tree, uint64_t trials)
+_benchmark_lookup_performance (struct fib_tree *tree, uint64_t trials)
 {
-  struct rib_node *n;
+  struct fib_node *n;
 
   double t1, t2;
   double elapsed, qps;
@@ -302,7 +302,7 @@ _benchmark_lookup_performance (struct rib_tree *tree, uint64_t trials)
       rand_host_u32 = xorshift32 (); /* ホストオーダの乱数 */
       uint32_to_ipv4_bytes_hton (rand_host_u32, rand_net_u8);
 
-      n = rib_route_lookup (tree, rand_net_u8);
+      n = fib_route_lookup (tree, rand_net_u8);
       sink ^= (uintptr_t)n;
     }
 
@@ -315,34 +315,34 @@ _benchmark_lookup_performance (struct rib_tree *tree, uint64_t trials)
 
   (void)sink; /* 未使用警告抑止 */
 
-  rib_free (tree);
+  fib_free (tree);
   return 0;
 }
 
 /* -------------------------------------------
  * Wrapper functions for test.h
  * ------------------------------------------- */
-struct rib_tree *
+struct fib_tree *
 test_load_routes (const char *routes_filename)
 {
   return _load_routes (routes_filename);
 }
 
 int
-test_basic (struct rib_tree *t, const char *lookup_addrs_filename)
+test_basic (struct fib_tree *t, const char *lookup_addrs_filename)
 {
   return _run_basic_lookup (t, lookup_addrs_filename);
 }
 
 int
-test_basic_delete (struct rib_tree *t, const char *lookup_addrs_filename,
+test_basic_delete (struct fib_tree *t, const char *lookup_addrs_filename,
                    const char *delete_routes_filename)
 {
   return _run_delete_test (t, lookup_addrs_filename, delete_routes_filename);
 }
 
 int
-test_performance (struct rib_tree *t)
+test_performance (struct fib_tree *t)
 {
   const uint64_t trials = 0x10000000ULL;
   return _benchmark_lookup_performance (t, trials);

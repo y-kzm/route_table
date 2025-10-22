@@ -2,7 +2,7 @@
 #include <stdint.h>
 
 #include "test.h"
-#include "radix.h"
+#include "fib.h"
 
 static void
 usage (const char *prog)
@@ -20,7 +20,7 @@ int
 main (int argc, const char *const argv[])
 {
   int ret;
-  struct rib_tree *t = NULL;
+  struct fib_tree *t = NULL;
 
   if (argc != 2 && argc != 3 && argc != 4)
     {
@@ -66,6 +66,6 @@ main (int argc, const char *const argv[])
         }
     }
 
-  rib_free (t);
+  fib_free (t);
   return 0;
 }

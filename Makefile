@@ -4,7 +4,7 @@ VALGRIND := valgrind
 VFLAGS   := -s --leak-check=full --show-leak-kinds=all --track-origins=yes
 
 # 共通ソース
-COMMON_SRCS := radix.c test.c
+COMMON_SRCS := fib.c test.c
 COMMON_OBJS := $(COMMON_SRCS:.c=.o)
 
 # プログラム main
