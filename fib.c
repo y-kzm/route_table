@@ -5,9 +5,6 @@
 
 #include "fib.h"
 
-// key: byte array, b: bit index
-#define BIT_CHECK(key, b) (((uint8_t *)(key))[(b) >> 3] & (0x80 >> ((b)&0x7)))
-
 // key: address, s: start bit, n: number of bits
 static inline uint32_t
 BIT_INDEX32 (const uint8_t *key, int s, int n)
@@ -180,62 +177,22 @@ fib_route_add (struct fib_tree *t, const uint8_t *key, int plen, void *data)
   return (t->root == NULL) ? -1 : 0; /* error(-1) if root is NULL */
 }
 
+#if 0 /* not implemented yet */
 static int
 _shrink (struct fib_node *n)
 {
-  return 0;
 }
 
 static struct fib_node *
 _delete (struct fib_node *n, uint8_t *key, int plen, int depth)
 {
-  uint32_t i;
-  uint32_t bits_in_depth, base, first, count;
-  uint32_t index;
-
-  if (n == NULL)
-    return NULL;
-
-  /* case1: 階層がプレフィックスに到達した場合 */
-  if (plen <= depth)
-    {
-      if (n->leaf)
-        {
-          /* 葉ノードを削除 */
-          free (n);
-          return NULL; /* 親が child[index] を NULL に更新できるように */
-        }
-      else
-        return n; /* 葉ノードでない場合は削除しない */
-    }
-
-  /* case2: プレフィックスが次の階層の途中で終わる場合 */
-  if (plen < depth + K)
-    {
-      bits_in_depth = plen - depth; // この階層で決定されるビット数（1〜K-1）
-      base = BIT_INDEX32 (key, depth, bits_in_depth);
-      first = base << (K - bits_in_depth); // 範囲の開始インデックス
-      count = 1 << (K - bits_in_depth);    // 範囲のサイズ
-
-      /* 範囲内のすべての子ノードを削除 */
-      for (i = first; i < first + count; i++)
-        n->child[i] = _delete (n->child[i], key, plen, depth + K);
-
-      return n; /* 更新された親ノードを返す */
-    }
-
-  /* case3: さらに深い階層へ再帰 */
-  index = BIT_INDEX32 (key, depth, K);
-  n->child[index] = _delete (n->child[index], key, plen, depth + K);
-  return n; /* 更新された親ノードを返す */
 }
 
 int
 fib_route_delete (struct fib_tree *t, uint8_t *key, int plen)
 {
-  t->root = _delete (t->root, key, plen, 0);
-  return 0; /* 削除成功 */
 }
+#endif /* 0 */
 
 static struct fib_node *
 _lookup (struct fib_node *n, struct fib_node *cand, const uint8_t *key,

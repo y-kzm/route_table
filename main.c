@@ -11,8 +11,7 @@ usage (const char *prog)
            "Usage: %s <route_file> [lookup_file] [delete_file]\n"
            "  <route_file>  : prefixes & nexthops input\n"
            "  [lookup_file] : run basic test with lookups; if omitted, run "
-           "performance test\n"
-           "  [delete_file] : run basic test with deletions additionally\n",
+           "performance test\n",
            prog);
 }
 
@@ -22,7 +21,7 @@ main (int argc, const char *const argv[])
   int ret;
   struct fib_tree *t = NULL;
 
-  if (argc != 2 && argc != 3 && argc != 4)
+  if (argc != 2 && argc != 3)
     {
       usage (argv[0]);
       return -1;
@@ -52,16 +51,6 @@ main (int argc, const char *const argv[])
       if (ret < 0)
         {
           fprintf (stderr, "Basic test failed with lookup file %s\n", argv[2]);
-          return -1;
-        }
-    }
-  else if (argc == 4)
-    {
-      fprintf (stdout, "Running basic test with delete file %s...\n", argv[3]);
-      ret = test_basic_delete (t, argv[2], argv[3]);
-      if (ret < 0)
-        {
-          fprintf (stderr, "Basic test failed with delete file %s\n", argv[3]);
           return -1;
         }
     }

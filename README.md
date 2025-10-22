@@ -3,7 +3,6 @@
 Usage: ./main <route_file> [lookup_file] [delete_file]
   <route_file>  : prefixes & nexthops input
   [lookup_file] : run basic test with lookups; if omitted, run performance test
-  [delete_file] : run basic test with deletions additionally
 ```
 
 ### `valgrind`

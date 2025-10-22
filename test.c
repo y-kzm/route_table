@@ -201,80 +201,6 @@ _run_basic_lookup (struct fib_tree *tree, const char *path)
 }
 
 /* -------------------------------------------
- * Delete test
- * ファイル形式: "<cidr>"
- * 例: "10.0.0.0/8"
- * ------------------------------------------- */
-int
-_run_delete_test (struct fib_tree *tree, const char *lookup_path,
-                  const char *delete_path)
-{
-  FILE *fp;
-
-  char line[LINE_BUF_SIZE];
-  char cidr_buf[IP_BUF_SIZE];
-
-  int plen, deleted;
-
-  uint8_t cidr_net_u8[4]; /* CIDR(ネットワークオーダ) */
-  // uint32_t cidr_host_u32; /* CIDR(ホストオーダ) */
-  // uint8_t nh_net_u8[4];   /* ネクストホップ(ネットワークオーダ) */
-  // uint32_t nh_host_u32;   /* ネクストホップ(ホストオーダ) */
-
-  if (!tree || !lookup_path || !delete_path)
-    return -1;
-
-  printf ("\nBefore deletion, run lookup test:\n");
-  if (_run_basic_lookup (tree, lookup_path) < 0)
-    return -1;
-
-  printf ("\nDelete routes from file: %s\n", delete_path);
-  fp = fopen (delete_path, "r");
-  if (!fp)
-    {
-      fprintf (stderr, "ERROR: cannot open delete file: %s\n", delete_path);
-      return -1;
-    }
-
-  deleted = 0;
-  while (fgets (line, sizeof (line), fp))
-    {
-      if (sscanf (line, "%63s", cidr_buf) != 1)
-        {
-          fprintf (stderr, "WARN: skip invalid line: %s", line);
-          continue;
-        }
-
-      plen = inet_net_pton (AF_INET, cidr_buf, cidr_net_u8,
-                            sizeof (cidr_net_u8));
-      if (plen < 0)
-        {
-          fprintf (stderr, "WARN: invalid CIDR \"%s\" (skip)\n", cidr_buf);
-          continue;
-        }
-
-      printf ("- Deleting route for %s\n", cidr_buf);
-      if (fib_route_delete (tree, cidr_net_u8, plen) < 0)
-        {
-          fprintf (stderr, "ERROR: fib_route_delete failed for %s\n",
-                   cidr_buf);
-          fclose (fp);
-          return -1;
-        }
-      deleted++;
-    }
-
-  printf ("Total %d routes deleted\n", deleted);
-  fclose (fp);
-
-  printf ("\nAfter deletion, run lookup test:\n");
-  if (_run_basic_lookup (tree, lookup_path) < 0)
-    return -1;
-
-  return 0;
-}
-
-/* -------------------------------------------
  * Performance benchmark
  * ランダム IPv4 を大量に引いてルックアップ（正否は不問）
  * ------------------------------------------- */
@@ -332,13 +258,6 @@ int
 test_basic (struct fib_tree *t, const char *lookup_addrs_filename)
 {
   return _run_basic_lookup (t, lookup_addrs_filename);
-}
-
-int
-test_basic_delete (struct fib_tree *t, const char *lookup_addrs_filename,
-                   const char *delete_routes_filename)
-{
-  return _run_delete_test (t, lookup_addrs_filename, delete_routes_filename);
 }
 
 int
