@@ -241,7 +241,6 @@ _benchmark_lookup_performance (struct fib_tree *tree, uint64_t trials)
 
   (void)sink; /* 未使用警告抑止 */
 
-  fib_free (tree);
   return 0;
 }
 
