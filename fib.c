@@ -137,6 +137,8 @@ _add (struct fib_node *n, const uint8_t *key, int plen, void *data, int depth)
        */
       /* 新しいプレフィックスが登録される子ノードの範囲を計算 */
       bits_in_depth = plen - depth; // この階層で決定されるビット数（1〜K-1）
+      if (bits_in_depth > K - 1)
+        bits_in_depth = K;
       base = BIT_INDEX32 (key, depth, bits_in_depth);
       first = base << (K - bits_in_depth); // 範囲の開始インデックス
       count = 1 << (K - bits_in_depth);    // 範囲のサイズ
@@ -144,12 +146,12 @@ _add (struct fib_node *n, const uint8_t *key, int plen, void *data, int depth)
       /* 全ての子ノードに対して */
       for (i = 0; i < BRANCH_SZ; i++)
         {
+          if (n->leaf)
+            /* 範囲外には親ノードのデータをコピー */
+            n->child[i] = _add (n->child[i], key, n->plen, n->data, depth + K);
           if (i >= first && i < first + count)
             /* この範囲には新しいノードを登録 */
             n->child[i] = _add (n->child[i], key, plen, data, depth + K);
-          else if (n->leaf)
-            /* 範囲外には親ノードのデータをコピー */
-            n->child[i] = _add (n->child[i], key, n->plen, n->data, depth + K);
         }
       /* 現在のノードはもはや葉ノードではない */
       n->leaf = 0;
