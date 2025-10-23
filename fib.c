@@ -147,10 +147,10 @@ _add (struct fib_node *n, const uint8_t *key, int plen, void *data, int depth)
       for (i = 0; i < BRANCH_SZ; i++)
         {
           if (n->leaf)
-            /* 範囲外には親ノードのデータをコピー */
+            /* 現在のノードが葉ノード場合には親ノードのデータをコピー */
             n->child[i] = _add (n->child[i], key, n->plen, n->data, depth + K);
           if (i >= first && i < first + count)
-            /* この範囲には新しいノードを登録 */
+            /* この範囲は新しいノードを登録(更新) */
             n->child[i] = _add (n->child[i], key, plen, data, depth + K);
         }
       /* 現在のノードはもはや葉ノードではない */
